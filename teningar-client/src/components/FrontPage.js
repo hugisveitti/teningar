@@ -1,24 +1,11 @@
 import { Grid, Button, Card, CardContent } from "@material-ui/core";
-import React, { useState, useEffect } from "react";
-import socketIOClient from "socket.io-client";
+import React, { useState } from "react";
 import SimpleDicePage from "./SimpleDicePage";
 import OnlineDicePage from "./OnlineDicePage";
 import "./FrontPage.css";
-import { config } from "../config";
-
-const ENDPOINT = config.ENDPOINT;
 
 const FrontPage = () => {
   const [playOption, setPlayOption] = useState("NONE");
-
-  const [response, setResponse] = useState("");
-
-  useEffect(() => {
-    const socket = socketIOClient(ENDPOINT);
-    socket.on("FromAPI", (data) => {
-      setResponse(data);
-    });
-  }, []);
 
   return (
     <Grid

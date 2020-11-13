@@ -33,7 +33,7 @@ const DiceGuessComponent = (props) => {
     if (showDieRef.current && diceGuess.diceValue) {
       showDieRef.current.rollAll([diceGuess.diceValue]);
     }
-  }, []);
+  }, [diceGuess.diceValue]);
 
   return (
     <Grid item xs={12}>
