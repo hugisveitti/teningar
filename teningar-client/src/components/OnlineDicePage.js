@@ -39,6 +39,12 @@ const OnlineDicePage = () => {
       <Grid item xs={12}>
         <h3>Online dice page</h3>
       </Grid>
+      <Grid item xs={12}>
+        <p>
+          In room name write some name, e.g. "party", "p" or anything. Then make
+          your friends write the same name to connect to your room.
+        </p>
+      </Grid>
       <Card style={{ margin: "auto" }}>
         <CardContent>
           <Grid item xs={12}>

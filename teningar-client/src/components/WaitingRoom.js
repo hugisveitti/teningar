@@ -29,7 +29,7 @@ const WaitingRoom = (props) => {
       setPlayers(data);
       setSortedPlayers(data);
     });
-  }, []);
+  }, [props.socket]);
 
   const startGame = () => {
     props.socket.emit("startGame", {});
@@ -39,6 +39,15 @@ const WaitingRoom = (props) => {
     <Grid container spacing={2}>
       <Grid item xs={12}>
         <h3>Waiting room for room '{props.roomName}'</h3>
+      </Grid>
+      <Grid item xs={12}>
+        <p>Waiting for leader to press play.</p>
+      </Grid>
+      <Grid item xs={12}>
+        <p>
+          You want the least points. You get 0 points for winning. You get 1
+          point if a there was one person to finish before you and etc.
+        </p>
       </Grid>
       <Grid item xs={12}>
         <h5>Players waiting</h5>
