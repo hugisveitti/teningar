@@ -33,7 +33,6 @@ const EndOfRoundInfoComponent = (props) => {
   useEffect(() => {
     if (props.data) {
       setIsOpen(true);
-      console.log(props.data);
       setPlayersRoundInfo(props.data.playersRoundInfo);
       setRoundInfoMsg(props.data.infoMsg);
     }
@@ -45,7 +44,6 @@ const EndOfRoundInfoComponent = (props) => {
 
   const renderPersonInfo = (player) => {
     const ref = createRef();
-    console.log("dicenumbs", player.diceNumbers);
     return (
       <TableRow key={player.name}>
         <TableCell align="center">{player.name}</TableCell>

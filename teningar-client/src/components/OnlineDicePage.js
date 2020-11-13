@@ -43,6 +43,7 @@ const OnlineDicePage = () => {
           In room name write some name, e.g. "party", "p" or anything. Then make
           your friends write the same name to connect to your room.
         </p>
+        <p>If you lose connection you can just join again with the same name</p>
       </Grid>
       <Card style={{ margin: "auto" }}>
         <CardContent>

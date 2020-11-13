@@ -12,8 +12,9 @@ const WaitingRoom = (props) => {
 
   useEffect(() => {
     props.socket.on("playerUpdate", (data) => {
-      setPlayers(data);
-      setSortedPlayers(data);
+      setPlayers(data.playerNamesAndScore);
+      setSortedPlayers(data.playerNamesAndScore);
+      setGameStarted(data.gameStarted);
     });
 
     props.socket.on("allowStartGame", (data) => {

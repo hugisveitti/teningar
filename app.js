@@ -27,6 +27,7 @@ class Player {
   io;
   diceNumbers;
   score;
+  isConnected;
   constructor(name, roomName, io, socket) {
     this.originalNumberOfDice = 6;
     this.numberOfDicesLeft = this.originalNumberOfDice;
@@ -37,6 +38,7 @@ class Player {
     this.socket = socket;
     this.diceNumbers = [];
     this.score = 0;
+    this.isConnected = true;
   }
 
   startGame() {
@@ -64,9 +66,12 @@ class Player {
     for (let i = 0; i < this.numberOfDicesLeft; i++) {
       this.diceNumbers[i] = parseInt(Math.random() * 6) + 1;
     }
+
+    this.sendRollDice();
+  }
+  sendRollDice() {
     this.socket.emit("diceRolled", this.diceNumbers);
   }
-
   getNumberOfDice(diceValue) {
     let count = 0;
     for (let i = 0; i < this.diceNumbers.length; i++) {
@@ -138,20 +143,17 @@ class Game {
   }
 
   addPlayer(playerName, socket) {
-    if (this.gameStarted) {
-      console.log("cannot add player if game started");
-      socket.emit("errorJoining", {
-        errorJoining: true,
-        errorMsg: "Cannot join if game has started",
-      });
-      // go through list and find player with that name and kick him, add new player
-      return;
-    }
     let isUniquePlayerName = true;
-
-    for (let i = 0; i < this.playerNames.length; i++) {
-      if (this.playerNames[i] === playerName) {
-        isUniquePlayerName = false;
+    // if player unconnects, he can reconnect if he puts in his name again
+    let unconnectedPlayer = undefined;
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i].name === playerName) {
+        if (this.players[i].isConnected) {
+          isUniquePlayerName = false;
+        } else {
+          //
+          unconnectedPlayer = this.players[i];
+        }
       }
     }
 
@@ -161,22 +163,42 @@ class Game {
         errorMsg: "Name not available",
       });
       return;
+    } else if (this.gameStarted && unconnectedPlayer === undefined) {
+      socket.emit("errorJoining", {
+        errorJoining: true,
+        errorMsg: "Cannot join if game has started",
+      });
+      // go through list and find player with that name and kick him, add new player
+      return;
     }
+
     socket.emit("errorJoining", {
       errorJoining: false,
       errorMsg: "",
     });
-
-    const player = new Player(playerName, this.roomName, this.io, socket);
-    if (this.leader === undefined) {
-      this.leader = player;
-      this.leader.allowStartGame();
-      this.leader.socket.on("startGame", () => {
-        this.startGame();
-      });
+    let player;
+    if (unconnectedPlayer !== undefined) {
+      player = unconnectedPlayer;
+      player.isConnected = true;
+      player.socket = socket;
+      if (this.gameStarted) {
+        setTimeout(() => {
+          player.sendRollDice();
+          this.startTurn();
+        }, 1000);
+      }
+    } else {
+      player = new Player(playerName, this.roomName, this.io, socket);
+      if (this.leader === undefined) {
+        this.leader = player;
+        this.leader.allowStartGame();
+        this.leader.socket.on("startGame", () => {
+          this.startGame();
+        });
+      }
+      this.players.push(player);
+      this.playerNames.push(playerName);
     }
-    this.players.push(player);
-    this.playerNames.push(playerName);
     this.emitPlayerUpdate();
   }
 
@@ -188,7 +210,11 @@ class Game {
         name: this.players[i].name,
       });
     }
-    this.io.to(this.roomName).emit("playerUpdate", playerNamesAndScore);
+    const playerInfo = {
+      playerNamesAndScore,
+      gameStarted: this.gameStarted,
+    };
+    this.io.to(this.roomName).emit("playerUpdate", playerInfo);
   }
 
   startGame() {
@@ -286,6 +312,7 @@ class Game {
       // round over
       this.gameOver();
     } else {
+      this.playerGuessingDice = loser;
       this.playerGuessingTruth = this.getNextPlayer(this.playerGuessingDice);
       this.currentGuess = new DiceGuess(1, 0);
 
@@ -304,6 +331,7 @@ class Game {
       currentGuess: this.currentGuess,
       isGuessTurn: this.isGuessTurn,
       playersFinished,
+      gameStarted: this.gameStarted,
     };
     this.io.to(this.roomName).emit("turnInfo", turnInfo);
   }
@@ -356,7 +384,12 @@ class Game {
   }
 
   isEmpty() {
-    return this.players.length === 0;
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i].isConnected) {
+        return false;
+      }
+    }
+    return true;
   }
 
   getGuess() {
@@ -386,7 +419,7 @@ io.on("connection", (socket) => {
   socket.on("connectToRoom", (data) => {
     playerName = data.playerName;
     playerRoom = data.roomName;
-
+    console.log("Adding player", playerName, "in", playerRoom);
     // join room with all players,
     // join room with only server and itself
     socket.leave(socket.room);
@@ -404,15 +437,12 @@ io.on("connection", (socket) => {
     // find user and delete from game
     if (playerRoom !== "") {
       const indexOfPlayer = games[playerRoom].playerNames.indexOf(playerName);
+      games[playerRoom].players[indexOfPlayer].isConnected = false;
+      console.log(
+        "player disconnects",
+        games[playerRoom].players[indexOfPlayer].name
+      );
 
-      games[playerRoom].players.splice(indexOfPlayer, 1);
-      games[playerRoom].playerNames.splice(indexOfPlayer, 1);
-      if (indexOfPlayer in games[playerRoom].playersFinishedWithGame) {
-        indexOfIndex = games[playerRoom].playersFinishedWithGame.indexOf(
-          indexOfPlayer
-        );
-        games[playerRoom].playersFinishedWithGame.splice(indexOfIndex, 1);
-      }
       if (games[playerRoom].isEmpty()) {
         // remove the room if all players disconnect
         // or if leader leaves
