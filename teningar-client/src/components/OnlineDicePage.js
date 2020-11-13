@@ -15,7 +15,6 @@ const OnlineDicePage = () => {
 
   useEffect(() => {
     const socket = socketIOClient(ENDPOINT);
-    console.log("Endpoint", ENDPOINT);
     setSocket(socket);
     socket.on("connectedToRoomCallBack", (data) => {});
   }, []);

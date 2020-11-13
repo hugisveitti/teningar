@@ -6,7 +6,8 @@ import DiceComponent from "./DiceComponent";
 import GameScoreBoard from "./GameScoreBoard";
 import DiceGuessComponent from "./DiceGuessComponent";
 import InfoContainer from "./InfoContainer";
-import TruthGuessComponent from "../TruthGuessComponent";
+import TruthGuessComponent from "./TruthGuessComponent";
+import EndOfRoundInfoComponent from "./EndOfRoundInfoComponent";
 
 const ref = createRef();
 
@@ -23,6 +24,8 @@ const OnlineGameComponent = (props) => {
     numberOfDice: 0,
   });
   const [isGuessTurn, setIsGuessTurn] = useState(true);
+
+  const [endOfRoundInfo, setEndOfRoundInfo] = useState(undefined);
 
   useEffect(() => {
     if (!props.socket) return;
@@ -51,6 +54,10 @@ const OnlineGameComponent = (props) => {
 
     props.socket.on("getTruth", () => {
       setTruthGuessTurn(true);
+    });
+
+    props.socket.on("endOfRoundInfo", (data) => {
+      setEndOfRoundInfo(data);
     });
   }, [props.socket]);
 
@@ -92,41 +99,44 @@ const OnlineGameComponent = (props) => {
   };
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <DiceComponent ref={ref} numberOfDice={diceNumbers.length} />
-      </Grid>
+    <>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <DiceComponent ref={ref} numberOfDice={diceNumbers.length} />
+        </Grid>
 
-      <Grid item xs={12}>
-        <Card style={{ maxWidth: 200, margin: "auto" }}>
-          <CardContent>
-            Current guess is {currentGuess.numberOfDice} of
-            {renderCurrentGuessDie()}
-          </CardContent>
-        </Card>
-      </Grid>
-      {diceGuessTurn && (
-        <DiceGuessComponent
-          socket={props.socket}
-          setDiceGuessTurn={setDiceGuessTurn}
-          illegalGuess={illegalGuess}
-          sendGuess={sendGuess}
+        <Grid item xs={12}>
+          <Card style={{ maxWidth: 200, margin: "auto" }}>
+            <CardContent>
+              Current guess is {currentGuess.numberOfDice} of
+              {renderCurrentGuessDie()}
+            </CardContent>
+          </Card>
+        </Grid>
+        {diceGuessTurn && (
+          <DiceGuessComponent
+            socket={props.socket}
+            setDiceGuessTurn={setDiceGuessTurn}
+            illegalGuess={illegalGuess}
+            sendGuess={sendGuess}
+          />
+        )}
+        {truthGuessTurn && <TruthGuessComponent sendTruth={sendTruth} />}
+        <InfoContainer
+          playerGuessingDice={playerGuessingDice}
+          playerGuessingTruth={playerGuessingTruth}
+          isGuessTurn={isGuessTurn}
         />
-      )}
-      {truthGuessTurn && <TruthGuessComponent sendTruth={sendTruth} />}
-      <InfoContainer
-        playerGuessingDice={playerGuessingDice}
-        playerGuessingTruth={playerGuessingTruth}
-        isGuessTurn={isGuessTurn}
-      />
 
-      <Grid item xs={12}>
-        <h5>Players in game</h5>
+        <Grid item xs={12}>
+          <h5>Players in game</h5>
+        </Grid>
+        <Grid item xs={12}>
+          <GameScoreBoard players={props.players} />
+        </Grid>
       </Grid>
-      <Grid item xs={12}>
-        <GameScoreBoard players={props.players} />
-      </Grid>
-    </Grid>
+      <EndOfRoundInfoComponent data={endOfRoundInfo} />
+    </>
   );
 };
 

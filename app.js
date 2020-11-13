@@ -244,13 +244,30 @@ class Game {
         totalNumberOfCurrentDice +
         this.players[i].getNumberOfDice(currentDiceValue);
     }
-
+    let infoMsg = "";
     let loser;
     if (totalNumberOfCurrentDice >= this.currentGuess.numberOfDice) {
       loser = this.playerGuessingTruth;
+      infoMsg = `${this.players[this.playerGuessingTruth].name} wrongly said ${
+        this.players[this.playerGuessingDice].name
+      } was bluffing`;
     } else {
       loser = this.playerGuessingDice;
+      infoMsg = `${this.players[this.playerGuessingTruth].name} called ${
+        this.players[this.playerGuessingDice].name
+      }'s bluff`;
     }
+    const playersRoundInfo = [];
+    for (let i = 0; i < this.players.length; i++) {
+      playersRoundInfo.push({
+        name: this.players[i].name,
+        diceNumbers: this.players[i].diceNumbers,
+      });
+    }
+
+    const info = { playersRoundInfo, infoMsg, loser: this.players[loser].name };
+
+    this.io.to(this.roomName).emit("endOfRoundInfo", info);
 
     const scoreForWinningThisRound = this.playersFinishedWithGame.length;
     // every player and diceGuesser lose one
