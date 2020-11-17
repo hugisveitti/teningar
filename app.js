@@ -29,7 +29,7 @@ class Player {
   score;
   isConnected;
   constructor(name, roomName, io, socket) {
-    this.originalNumberOfDice = 6;
+    this.originalNumberOfDice = 5;
     this.numberOfDicesLeft = this.originalNumberOfDice;
     this.name = name;
     this.roomName = roomName;

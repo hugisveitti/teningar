@@ -1,8 +1,11 @@
-import { Grid, Button, Card, CardContent } from "@material-ui/core";
+import { Grid, Button, Card, CardContent, Tooltip } from "@material-ui/core";
 import React, { useState } from "react";
 import SimpleDicePage from "./SimpleDicePage";
 import OnlineDicePage from "./OnlineDicePage";
 import "./FrontPage.css";
+
+const gameRulesText =
+  "Everybody roles their dice, then the first better bets how many dice are of one variant on the table (sum of all players dice). The challenger, calls his bet by saying it is true or a bluff. If he says its true then he becomes the bettor, and he needs to bet either a higher variant and same number of dice or a higher number of dice. If he says its a bluff then one of the players loses a dice. The player first to lose all of the dice wins, and last loses. If you lose you get a point.";
 
 const FrontPage = () => {
   const [playOption, setPlayOption] = useState("NONE");
@@ -37,7 +40,7 @@ const FrontPage = () => {
                 Play simple
               </Button>
             </Grid>
-            <Grid item xs={6} style={{ margin: "auto" }}>
+            <Grid item xs={6} style={{ margin: "auto", marginBottom: 20 }}>
               <Button
                 color="secondary"
                 variant="contained"
@@ -45,6 +48,13 @@ const FrontPage = () => {
               >
                 Play online
               </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Tooltip title={gameRulesText} style={{ width: 350 }}>
+                <Button variant="contained" style={{ width: 100 }}>
+                  Rules
+                </Button>
+              </Tooltip>
             </Grid>
           </CardContent>
         </Card>
